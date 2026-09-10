@@ -14,7 +14,7 @@ terraform {
   # alongside the state, which is what actually enforces the lock.
   backend "s3" {
     bucket       = "atmosly-terraform-testing-state"
-    key          = "dev/terraform.tfstate"
+    key          = "dev/amit/terraform.tfstate"
     region       = "us-east-1"
     use_lockfile = true
     encrypt      = true
