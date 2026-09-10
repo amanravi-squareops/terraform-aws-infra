@@ -1,5 +1,5 @@
 aws_region   = "us-east-1"
-project_name = "myapp"
+project_name = "mytf"
 environment  = "dev"
 
 vpc_cidr             = "10.0.0.0/16"
