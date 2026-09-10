@@ -132,7 +132,25 @@ especially on prod.
   always goes first). Prod pauses for manual approval if you set up the
   GitHub Environment protection rule above.
 
-## 5. Backend service image
+## 5. S3 access for the backend service
+
+`modules/storage` creates a private, encrypted, versioned S3 bucket for the
+app's own data (uploads, generated files, logs) — **separate from the
+Terraform state bucket**, which only stores Terraform's own bookkeeping and
+has nothing to do with the application.
+
+The EC2 instances get an IAM role scoped to *only* this bucket
+(`s3:GetObject`, `s3:PutObject`, `s3:DeleteObject`, `s3:ListBucket` on that
+one ARN — nothing else in the account). The bucket name and region are
+passed into the container as `APP_DATA_BUCKET` and `AWS_REGION` env vars, so
+your backend code can pick them up and use the AWS SDK's default credential
+chain (which will automatically find the instance's IAM role — no access
+keys needed inside the container either).
+
+`terraform output app_data_bucket_name` after apply gives you the real
+bucket name to sanity-check against.
+
+## 6. Backend service image
 
 `docker_image` in each env's `terraform.tfvars` points at whatever registry
 you publish to (ECR, GHCR, Docker Hub). Update the value and re-run

@@ -61,3 +61,18 @@ variable "key_name" {
   type        = string
   default     = null
 }
+
+variable "app_data_bucket_arn" {
+  description = "ARN of the S3 bucket the backend service is allowed to read/write"
+  type        = string
+}
+
+variable "app_data_bucket_name" {
+  description = "Name of the S3 bucket, passed into the container as an env var"
+  type        = string
+}
+
+variable "aws_region" {
+  description = "Region, passed into the container so its AWS SDK client knows where the bucket lives"
+  type        = string
+}

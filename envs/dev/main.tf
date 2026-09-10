@@ -20,6 +20,14 @@ module "security" {
   # ssh_allowed_cidrs left empty on purpose - use SSM Session Manager instead
 }
 
+module "storage" {
+  source = "../../modules/storage"
+
+  project_name  = var.project_name
+  environment   = var.environment
+  force_destroy = true # dev: ok to nuke bucket + its contents on destroy
+}
+
 module "compute" {
   source = "../../modules/compute"
 
@@ -37,4 +45,8 @@ module "compute" {
   min_size         = var.min_size
   max_size         = var.max_size
   desired_capacity = var.desired_capacity
+
+  aws_region            = var.aws_region
+  app_data_bucket_arn   = module.storage.bucket_arn
+  app_data_bucket_name  = module.storage.bucket_name
 }

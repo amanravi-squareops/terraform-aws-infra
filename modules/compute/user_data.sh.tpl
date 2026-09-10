@@ -15,4 +15,6 @@ docker run -d \
   --restart unless-stopped \
   -p ${app_port}:${app_port} \
   -e ENVIRONMENT=${environment} \
+  -e APP_DATA_BUCKET=${app_data_bucket} \
+  -e AWS_REGION=${aws_region} \
   ${docker_image}

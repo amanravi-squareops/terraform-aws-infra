@@ -55,6 +55,59 @@ resource "aws_lb_listener" "http" {
 }
 
 ############################################
+# IAM role for EC2 - scoped to ONLY the app's S3 bucket.
+# The instance can never touch any other bucket in the account.
+############################################
+resource "aws_iam_role" "ec2" {
+  name_prefix = "${var.project_name}-${var.environment}-ec2-"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+
+  tags = {
+    Environment = var.environment
+  }
+}
+
+resource "aws_iam_role_policy" "s3_app_data" {
+  name = "${var.project_name}-${var.environment}-s3-app-data"
+  role = aws_iam_role.ec2.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "ListOwnBucket"
+        Effect = "Allow"
+        Action = ["s3:ListBucket"]
+        Resource = var.app_data_bucket_arn
+      },
+      {
+        Sid    = "ReadWriteOwnBucketObjects"
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject"
+        ]
+        Resource = "${var.app_data_bucket_arn}/*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_instance_profile" "ec2" {
+  name_prefix = "${var.project_name}-${var.environment}-ec2-"
+  role        = aws_iam_role.ec2.name
+}
+
+############################################
 # Launch template + Auto Scaling Group (private subnets)
 ############################################
 resource "aws_launch_template" "backend" {
@@ -65,10 +118,16 @@ resource "aws_launch_template" "backend" {
 
   vpc_security_group_ids = [var.ec2_sg_id]
 
+  iam_instance_profile {
+    name = aws_iam_instance_profile.ec2.name
+  }
+
   user_data = base64encode(templatefile("${path.module}/user_data.sh.tpl", {
-    docker_image = var.docker_image
-    app_port     = var.app_port
-    environment  = var.environment
+    docker_image    = var.docker_image
+    app_port        = var.app_port
+    environment     = var.environment
+    app_data_bucket = var.app_data_bucket_name
+    aws_region      = var.aws_region
   }))
 
   tag_specifications {
