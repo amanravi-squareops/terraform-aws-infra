@@ -25,23 +25,22 @@ and a different state `key`.
 
 ## 1. One-time setup: remote state backend
 
-Terraform state should never live only on a laptop or in git. Create these
-once, manually (only need to do this once ever, not per-env):
+Terraform state should never live only on a laptop or in git. Create the
+bucket once, manually (only need to do this once ever, not per-env):
 
 ```bash
 aws s3api create-bucket --bucket YOUR-terraform-state-bucket --region ap-south-1 \
   --create-bucket-configuration LocationConstraint=ap-south-1
 aws s3api put-bucket-versioning --bucket YOUR-terraform-state-bucket \
   --versioning-configuration Status=Enabled
-
-aws dynamodb create-table --table-name YOUR-terraform-locks \
-  --attribute-definitions AttributeName=LockID,AttributeType=S \
-  --key-schema AttributeName=LockID,KeyType=HASH \
-  --billing-mode PAY_PER_REQUEST
 ```
 
-Then replace `REPLACE-ME-terraform-state-bucket` and `REPLACE-ME-terraform-locks`
-in `envs/dev/providers.tf` and `envs/prod/providers.tf` with your real names.
+No DynamoDB table is needed. This project uses `use_lockfile = true`
+(Terraform 1.10+), which locks the state using S3's own conditional writes
+instead of a separate lock table — one less resource to create and pay for.
+
+Then replace `REPLACE-ME-terraform-state-bucket` in `envs/dev/providers.tf`
+and `envs/prod/providers.tf` with your real bucket name.
 
 ## 2. One-time setup: GitHub OIDC auth to AWS (no access keys)
 
