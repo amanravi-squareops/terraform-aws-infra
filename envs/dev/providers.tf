@@ -13,7 +13,7 @@ terraform {
   # conditional writes (If-None-Match) to create/remove a .tflock file
   # alongside the state, which is what actually enforces the lock.
   backend "s3" {
-    bucket       = "REPLACE-ME-terraform-state-bucket"
+    bucket       = "atmosly-terraform-testing-state"
     key          = "dev/terraform.tfstate"
     region       = "ap-south-1"
     use_lockfile = true
